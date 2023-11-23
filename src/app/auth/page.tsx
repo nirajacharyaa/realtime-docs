@@ -7,8 +7,12 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getPageSession } from "@/lib/auth/lucia";
+import { redirect } from "next/navigation";
 
-export default function AuthPage() {
+export default async function AuthPage() {
+  const session = await getPageSession();
+  if (session) redirect("/");
   return (
     <main className="flex sm:items-center justify-center min-h-screen">
       <Card className="w-full sm:w-[500px]">

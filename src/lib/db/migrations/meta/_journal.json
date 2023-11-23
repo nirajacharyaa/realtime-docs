@@ -1,1 +1,27 @@
-{"version":"5","dialect":"pg","entries":[]}
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1700722592390,
+      "tag": "0000_misty_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1700725858092,
+      "tag": "0001_special_lucky_pierre",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1700728406234,
+      "tag": "0002_classy_reaper",
+      "breakpoints": true
+    }
+  ]
+}

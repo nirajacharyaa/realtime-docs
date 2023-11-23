@@ -2,10 +2,16 @@ import { lucia } from "lucia";
 import { nextjs_future } from "lucia/middleware";
 import { pg } from "@lucia-auth/adapter-postgresql";
 import { db } from "@vercel/postgres";
-import { env } from "../env.mjs";
+import { cache } from "react";
+import * as context from "next/headers";
+
+import * as dotenv from "dotenv";
+dotenv.config({
+  path: ".env.local",
+});
 
 export const auth = lucia({
-  env: env.NODE_ENV === "production" ? "PROD" : "DEV",
+  env: process.env.NODE_ENV === "production" ? "PROD" : "DEV",
   middleware: nextjs_future(),
   sessionCookie: {
     expires: false,
@@ -26,3 +32,8 @@ export const auth = lucia({
 });
 
 export type Auth = typeof auth;
+
+export const getPageSession = cache(() => {
+  const authRequest = auth.handleRequest("GET", context);
+  return authRequest.validate();
+});

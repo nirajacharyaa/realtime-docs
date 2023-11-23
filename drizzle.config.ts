@@ -1,14 +1,18 @@
 import type { Config } from "drizzle-kit";
-import { env } from "@/lib/env.mjs";
+import * as dotenv from "dotenv";
+
+dotenv.config({
+  path: ".env.local",
+});
 
 export default {
-  schema: "./src/lib/db/schema.ts",
+  schema: "./src/lib/db/schema",
   out: "./src/lib/db/migrations",
   driver: "pg",
   dbCredentials: {
-    connectionString: env.POSTGRES_URL.endsWith("sslmode=require")
-      ? env.POSTGRES_URL
-      : env.POSTGRES_URL.concat("?sslmode=require"),
+    connectionString: process.env.POSTGRES_URL!.endsWith("sslmode=require")
+      ? process.env.POSTGRES_URL!
+      : process.env.POSTGRES_URL!.concat("?sslmode=require"),
   },
   breakpoints: true,
 } satisfies Config;
