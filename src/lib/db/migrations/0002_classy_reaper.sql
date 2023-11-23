@@ -1,1 +1,0 @@
-ALTER TABLE "auth_user" ADD COLUMN "name" varchar(255) NOT NULL;
