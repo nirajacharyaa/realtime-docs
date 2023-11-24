@@ -4,14 +4,11 @@ import {
   varchar,
   primaryKey,
   pgEnum,
-  timestamp,
 } from "drizzle-orm/pg-core";
-
-export const enumRoleName = pgEnum("user_role_name", ["SUPER_ADMIN", "ADMIN"]);
-export const enumDocumentUserPermission = pgEnum("document_user_permission", [
-  "EDIT",
-  "VIEW",
-]);
+import { z } from "zod";
+import { createSelectSchema } from "drizzle-zod";
+import { cascadedUserId, id, timeStamp } from "./utils";
+import { enumRoleName } from "./enums";
 
 export const user = pgTable("auth_user", {
   id: varchar("id", {
@@ -46,9 +43,7 @@ export const session = pgTable("user_session", {
 });
 
 export const role = pgTable("role", {
-  id: varchar("id", {
-    length: 15,
-  }).primaryKey(),
+  id: id(),
   name: enumRoleName("name").notNull(),
 });
 
@@ -69,22 +64,12 @@ export const key = pgTable("user_key", {
 export const userRole = pgTable(
   "user_role",
   {
-    userId: varchar("user_id", {
-      length: 15,
-    })
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    userId: cascadedUserId(),
     roleId: varchar("role_id")
       .notNull()
       .references(() => role.id, { onDelete: "cascade", onUpdate: "cascade" }),
-    createdAt: timestamp("created_at", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
-    updatedAt: timestamp("updated_at", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
+    createdAt: timeStamp("created_at"),
+    updatedAt: timeStamp("updated_at"),
   },
   (table) => {
     return {
@@ -94,3 +79,9 @@ export const userRole = pgTable(
     };
   }
 );
+
+export const selectAuthUser = createSelectSchema(user);
+export const userIdSchema = selectAuthUser.pick({ id: true });
+
+export type AuthUserType = z.infer<typeof selectAuthUser>;
+export type UserId = z.infer<typeof userIdSchema>["id"];

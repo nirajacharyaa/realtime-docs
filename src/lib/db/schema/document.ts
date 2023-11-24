@@ -3,60 +3,38 @@ import {
   varchar,
   boolean,
   jsonb,
-  timestamp,
   primaryKey,
 } from "drizzle-orm/pg-core";
-import { enumDocumentUserPermission, user } from ".";
+import { enumDocumentUserPermission } from "./enums";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
+import { cascadedUserId, id, timeStamp, userIdNullable } from "./utils";
 
 export const document = pgTable("document", {
-  id: varchar("id", {
-    length: 15,
-  }).primaryKey(),
+  id: id(),
   title: varchar("title", {
     length: 255,
-  }).notNull(),
-  content: jsonb("content"),
-  useId: varchar("user_id").references(() => user.id, {
-    onDelete: "set null",
-    onUpdate: "cascade",
   }),
+  content: jsonb("content"),
+  userId: userIdNullable(),
   isPublic: boolean("is_public").default(false),
-  createdAt: timestamp("created_at", {
-    withTimezone: true,
-    mode: "string",
-  }).notNull(),
-  updatedAt: timestamp("updated_at", {
-    withTimezone: true,
-    mode: "string",
-  }).notNull(),
+  createdAt: timeStamp("created_at"),
+  updatedAt: timeStamp("updated_at"),
 });
 
 export const documentUser = pgTable(
   "document_user",
   {
     permission: enumDocumentUserPermission("permission").notNull(),
-    userId: varchar("user_id", {
-      length: 15,
-    })
-      .notNull()
-      .references(() => user.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
+    userId: cascadedUserId(),
     documentId: varchar("document_id", {
       length: 15,
     }).references(() => document.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
     }),
-    createdAt: timestamp("created_at", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
-    updatedAt: timestamp("updated_at", {
-      withTimezone: true,
-      mode: "string",
-    }).notNull(),
+    createdAt: timeStamp("created_at"),
+    updatedAt: timeStamp("updated_at"),
   },
   (table) => {
     return {
@@ -66,3 +44,16 @@ export const documentUser = pgTable(
     };
   }
 );
+
+export const insertDocumentSchema = createInsertSchema(document);
+export const selectDocumentSchema = createSelectSchema(document);
+export const documentIdSchema = selectDocumentSchema.pick({
+  id: true,
+});
+export const updateDocumentSchema = selectDocumentSchema.partial().extend({
+  id: z.string(),
+  userId: z.string(),
+});
+
+export type DocumentId = z.infer<typeof documentIdSchema>["id"];
+export type UpdateDocumentType = z.infer<typeof updateDocumentSchema>;

@@ -8,6 +8,20 @@
       "when": 1700755462831,
       "tag": "0000_fast_sumo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1700811103178,
+      "tag": "0001_pretty_banshee",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1700816842227,
+      "tag": "0002_tense_black_bolt",
+      "breakpoints": true
     }
   ]
 }
