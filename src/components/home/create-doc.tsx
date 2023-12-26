@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import {
   Dialog,
   DialogClose,
@@ -21,13 +21,22 @@ import { useAction } from "next-safe-action/hook";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
 import { useRouter } from "next/navigation";
 import { toast } from "../ui/use-toast";
+import { cn } from "@/lib/utils";
+import { z } from "zod";
+
+enum Visibility {
+  Public = "public",
+  Private = "private",
+}
+type Schema = {
+  visibility: Visibility;
+};
 
 export default function CreateDoc({
   children,
@@ -39,12 +48,36 @@ export default function CreateDoc({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<InsertDocumentType>({
-    resolver: zodResolver(insertDocumentSchema),
+    setValue,
+  } = useForm<InsertDocumentType & Schema>({
+    resolver: zodResolver(
+      insertDocumentSchema.merge(
+        z.object({
+          visibility: z.enum(["public", "private"]),
+        })
+      )
+    ),
+    defaultValues: {
+      visibility: Visibility.Private,
+    },
   });
   const { execute, status, result } = useAction(createDoc);
   const router = useRouter();
+  useEffect(() => {
+    if (status == "hasSucceeded") {
+      toast({
+        title: "Document created",
+      });
+      router.push(`/doc/${result.data?.doc.id}`);
+    }
+    if (status == "hasErrored") {
+      toast({
+        title: result.fetchError || result.serverError || "Unknown error",
+      });
+    }
+  }, [status, result, router]);
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -54,31 +87,51 @@ export default function CreateDoc({
         </DialogHeader>
         <form
           onSubmit={handleSubmit(async (data) => {
+            console.log(data);
             execute({
               userId,
-              isPublic: data.isPublic,
+              isPublic: data.visibility === Visibility.Public ? true : false,
               title: data.title,
             });
-            if (status == "hasSucceeded") {
-              router.push(`/doc/${result.data?.doc.id}`);
-            }
-            if (status == "hasErrored") {
-              toast({
-                title:
-                  result.fetchError || result.serverError || "Unknown error",
-              });
-            }
           })}
         >
           <div className="mb-4 space-y-4">
             <div>
               <Label>Document name</Label>
-              <Input placeholder="Document name" {...register("title")} />
+              <Input
+                placeholder="Document name"
+                {...register("title")}
+                className={cn(
+                  errors.title?.message &&
+                    "border-rose-600 focus-visible:ring-rose-600 focus-within:ring-rose-600 focus:ring-rose-600 ring-rose-600"
+                )}
+              />
+
+              {errors.title?.message && (
+                <span className="text-sm text-rose-600 px-2">
+                  {errors.title?.message}
+                </span>
+              )}
             </div>
             <div>
+              {/* // TODO: create set the  */}
               <Label>Visibility</Label>
-              <Select defaultValue="private">
-                <SelectTrigger>
+              <Select
+                defaultValue={watch("visibility")}
+                {...register("visibility")}
+                onValueChange={(value) => {
+                  setValue(
+                    "visibility",
+                    value == "public" ? Visibility.Public : Visibility.Private
+                  );
+                }}
+              >
+                <SelectTrigger
+                  className={cn(
+                    errors.visibility?.message &&
+                      "border-rose-600 focus-visible:ring-rose-600 focus-within:ring-rose-600 focus:ring-rose-600 ring-rose-600"
+                  )}
+                >
                   <SelectValue placeholder="Select visibility" />
                 </SelectTrigger>
                 <SelectContent>
@@ -92,6 +145,11 @@ export default function CreateDoc({
                   </SelectItem>
                 </SelectContent>
               </Select>
+              {errors.visibility?.message && (
+                <span className="text-sm text-rose-600 px-2">
+                  {errors.visibility?.message}
+                </span>
+              )}
             </div>
           </div>
           <DialogFooter>
