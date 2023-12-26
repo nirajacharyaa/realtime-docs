@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth/lucia";
+import { DrizzleError } from "drizzle-orm";
 import { LuciaError } from "lucia";
 import * as context from "next/headers";
 import { NextResponse } from "next/server";
@@ -78,10 +79,21 @@ export const POST = async (request: NextRequest) => {
     if (e instanceof LuciaError && e.message === "AUTH_DUPLICATE_KEY_ID") {
       return NextResponse.json(
         {
-          error: "Username already taken",
+          error: "Email already exists",
         },
         {
           status: 400,
+        }
+      );
+    }
+
+    if (e instanceof DrizzleError) {
+      return NextResponse.json(
+        {
+          error: e.message,
+        },
+        {
+          status: 500,
         }
       );
     }

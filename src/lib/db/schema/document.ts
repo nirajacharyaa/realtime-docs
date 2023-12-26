@@ -55,5 +55,7 @@ export const updateDocumentSchema = selectDocumentSchema.partial().extend({
   userId: z.string(),
 });
 
+export type InsertDocumentType = z.infer<typeof insertDocumentSchema>;
+export type Document = z.infer<typeof selectDocumentSchema>;
 export type DocumentId = z.infer<typeof documentIdSchema>["id"];
 export type UpdateDocumentType = z.infer<typeof updateDocumentSchema>;
